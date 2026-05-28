@@ -1,0 +1,52 @@
+# Entorno virtual - NO subir (cientos de MB)
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Pesos del modelo entrenado (archivos grandes)
+outputs/models/*.pt
+outputs/models/*.pth
+outputs/models/*.ckpt
+outputs/models/*.bin
+
+# Archivos de predicciones grandes
+outputs/*.npz
+outputs/models/*.npz
+
+# Imagenes del dataset (42 GB) - solo van los CSV de metadata
+data/raw/images/
+data/images/
+*.png.gz
+
+# Variables de entorno
+.env
+.env.local
+
+# IDE
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Kaggle credentials
+kaggle.json

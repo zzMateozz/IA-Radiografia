@@ -1,0 +1,36 @@
+# Núcleo de análisis de datos
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8
+seaborn>=0.13
+
+# Procesamiento de imágenes
+Pillow>=10.0
+opencv-python>=4.9
+scikit-image>=0.22
+
+# Machine Learning
+scikit-learn>=1.4
+
+# Deep Learning (CPU-only por defecto en local; en Kaggle ya está la versión GPU)
+torch>=2.2
+torchvision>=0.17
+timm>=1.0
+
+# Específico para X-rays
+torchxrayvision>=1.2
+
+# Notebooks (kernel para Cursor / VS Code; jupyterlab no es necesario)
+ipykernel>=6.29
+ipywidgets>=8.0
+tqdm>=4.66
+
+# Demo / interfaz
+streamlit>=1.30
+gradio>=4.20
+
+# Visualización avanzada
+plotly>=5.18
+
+# Para Grad-CAM
+grad-cam>=1.5

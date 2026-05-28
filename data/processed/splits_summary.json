@@ -1,0 +1,73 @@
+{
+  "splits": {
+    "train": {
+      "n_images": 69219,
+      "n_patients": 22407,
+      "pct_images": 61.74,
+      "prevalence_pct": {
+        "Atelectasis": 9.53,
+        "Cardiomegaly": 1.93,
+        "Effusion": 10.0,
+        "Infiltration": 15.97,
+        "Mass": 4.44,
+        "Nodule": 5.33,
+        "Pneumonia": 1.04,
+        "Pneumothorax": 2.98,
+        "Consolidation": 3.22,
+        "Edema": 1.53,
+        "Emphysema": 1.56,
+        "Fibrosis": 1.5,
+        "Pleural_Thickening": 2.68,
+        "Hernia": 0.15
+      }
+    },
+    "val": {
+      "n_images": 17305,
+      "n_patients": 5601,
+      "pct_images": 15.43,
+      "prevalence_pct": {
+        "Atelectasis": 9.72,
+        "Cardiomegaly": 2.16,
+        "Effusion": 10.03,
+        "Infiltration": 15.75,
+        "Mass": 5.57,
+        "Nodule": 5.89,
+        "Pneumonia": 0.88,
+        "Pneumothorax": 3.31,
+        "Consolidation": 3.62,
+        "Edema": 1.86,
+        "Emphysema": 1.97,
+        "Fibrosis": 1.24,
+        "Pleural_Thickening": 2.24,
+        "Hernia": 0.23
+      }
+    },
+    "test": {
+      "n_images": 25596,
+      "n_patients": 2797,
+      "pct_images": 22.83,
+      "prevalence_pct": {
+        "Atelectasis": 12.81,
+        "Cardiomegaly": 4.18,
+        "Effusion": 18.2,
+        "Infiltration": 23.88,
+        "Mass": 6.83,
+        "Nodule": 6.34,
+        "Pneumonia": 2.17,
+        "Pneumothorax": 10.41,
+        "Consolidation": 7.09,
+        "Edema": 3.61,
+        "Emphysema": 4.27,
+        "Fibrosis": 1.7,
+        "Pleural_Thickening": 4.47,
+        "Hernia": 0.34
+      }
+    }
+  },
+  "leakage_check": {
+    "train_val_overlap": 0,
+    "train_test_overlap": 0,
+    "val_test_overlap": 0,
+    "ok": true
+  }
+}
