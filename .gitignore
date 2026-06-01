@@ -14,15 +14,9 @@ __pycache__/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Pesos del modelo entrenado (archivos grandes)
-outputs/models/*.pt
-outputs/models/*.pth
+# Pesos del modelo muy grandes (>100MB)
 outputs/models/*.ckpt
 outputs/models/*.bin
-
-# Archivos de predicciones grandes
-outputs/*.npz
-outputs/models/*.npz
 
 # Imagenes del dataset (42 GB) - solo van los CSV de metadata
 data/raw/images/
