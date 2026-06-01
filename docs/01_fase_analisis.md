@@ -3,7 +3,9 @@
 **Proyecto de Aula — Inteligencia Artificial — III Corte (Fase 3)**
 Universidad Popular del Cesar — Facultad de Ingeniería de Sistemas — 2026-I
 
-**Integrantes:** Mateo López Patiño, Anaclaudia Vega Martínez, Tonny Enrique Jiménez Márquez
+**Integrantes:** Mateo López Patiño, Anaclaudia Vega Martínez.
+
+**Docente:** Tonny Enrique Jiménez Márquez.
 
 ---
 
