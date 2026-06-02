@@ -28,6 +28,7 @@ tqdm>=4.66
 # Demo / interfaz
 streamlit>=1.30
 gradio>=4.20
+reportlab>=4.0
 
 # Visualización avanzada
 plotly>=5.18
