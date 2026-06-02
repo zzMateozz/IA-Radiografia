@@ -1,4 +1,4 @@
-"""Página: EDA del dataset NIH."""
+"""Página: EDA del dataset NIH — versión limpia y profesional."""
 
 import streamlit as st
 
@@ -8,16 +8,16 @@ from ui.components import card, section_title, show_figure
 
 def render():
     section_title(
-        "📈", "Análisis Exploratorio del Dataset",
-        "NIH ChestX-ray14 — 112,120 radiografías · 14 patologías · 30,805 pacientes",
+        "Exploración del dataset NIH",
+        "NIH ChestX-ray14 — 112 120 radiografías · 14 patologías · 30 805 pacientes",
     )
 
     cols = st.columns(4, gap="small")
     stats = [
-        ("Imágenes totales", "112,120", "radiografías frontales"),
-        ("Pacientes únicos", "30,805", "sin solapamiento train/test"),
+        ("Imágenes totales", "112 120", "radiografías frontales"),
+        ("Pacientes únicos", "30 805", "sin solapamiento train/test"),
         ("Patologías", "14", "clasificación multi-etiqueta"),
-        ("Sin hallazgo", "53.8 %", "60,361 imágenes normales"),
+        ("Sin hallazgo", "53.8 %", "60 361 imágenes normales"),
     ]
     for col, (lbl, val, sub) in zip(cols, stats):
         with col:
@@ -26,9 +26,9 @@ def render():
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
     tab1, tab2, tab3 = st.tabs([
-        "📊 Distribución de patologías",
-        "👥 Demografía y pacientes",
-        "🔗 Co-ocurrencia y edad",
+        "Distribución de patologías",
+        "Demografía y pacientes",
+        "Co‑ocurrencia y edad",
     ])
 
     with tab1:

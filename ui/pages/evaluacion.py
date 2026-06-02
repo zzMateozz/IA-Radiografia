@@ -1,16 +1,17 @@
-"""Página: Evaluación de resultados del modelo."""
+"""Página: Evaluación de resultados del modelo — estilo renovado."""
 
 import pandas as pd
 import streamlit as st
 
 from src.config import CHEXNET_AUC, EVAL_FIGURES, PATHOLOGIES
 from ui.components import section_title, show_figure
+from ui.theme import PALETTE as C
 
 
 def render(test_results):
     section_title(
-        "📊", "Evaluación de Resultados",
-        "Métricas del modelo sobre el set de test de NIH ChestX-ray14 (25,596 imágenes).",
+        "Evaluación del modelo",
+        "Métricas sobre el conjunto de test oficial de NIH ChestX-ray14 (25 596 imágenes).",
     )
 
     if test_results is None:
@@ -38,10 +39,10 @@ def render(test_results):
     st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
     tab1, tab2, tab3, tab4 = st.tabs([
-        "📉 Curvas de aprendizaje",
-        "🏆 AUC por patología",
-        "📈 Curvas ROC",
-        "🔍 Distribución de predicciones",
+        "Curvas de aprendizaje",
+        "AUC por patología",
+        "Curvas ROC",
+        "Distribución de predicciones",
     ])
 
     with tab1:
@@ -57,16 +58,16 @@ def render(test_results):
                 "Nuestro AUC": round(our, 4),
                 "CheXNet AUC": round(ref, 4),
                 "Δ Diferencia": round(our - ref, 4),
-                "F1-Score": round(test_results["test_f1_per_class"][p], 4),
+                "F1‑Score": round(test_results["test_f1_per_class"][p], 4),
                 "Avg Precision": round(test_results["test_ap_per_class"][p], 4),
             })
         df = pd.DataFrame(rows)
 
         def hl(v):
             return (
-                "background-color:#052e16;color:#4ade80;font-weight:600"
+                "background-color:#D1E7DD;color:#0F5132;font-weight:600"
                 if v >= 0 else
-                "background-color:#450a0a;color:#f87171;font-weight:600"
+                "background-color:#F8D7DA;color:#842029;font-weight:600"
             )
 
         styled = (
@@ -76,7 +77,7 @@ def render(test_results):
                 "Nuestro AUC": "{:.4f}",
                 "CheXNet AUC": "{:.4f}",
                 "Δ Diferencia": "{:+.4f}",
-                "F1-Score": "{:.4f}",
+                "F1‑Score": "{:.4f}",
                 "Avg Precision": "{:.4f}",
             })
         )

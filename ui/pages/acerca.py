@@ -6,14 +6,15 @@ from ui.components import section_title
 
 
 def render():
-    section_title("ℹ️", "Acerca del proyecto")
+    section_title("Acerca del proyecto")
     st.markdown("""
     **Proyecto de Aula — Inteligencia Artificial — III Corte**
     Universidad Popular del Cesar · Facultad de Ingeniería de Sistemas · 2026-I
 
     | | |
     |---|---|
-    | **Integrantes** | Mateo Lopez Patiño · Anaclaudia Vega Martinez · Tonny Enrique Jimenez Marquez |
+    | **Integrantes** | Mateo Lopez Patiño · Anaclaudia Vega Martinez|
+    | **Docente** | Tonny Enrique Jimenez Marquez|
     | **Modelo** | DenseNet-121 con Transfer Learning (ImageNet → NIH ChestX-ray14) |
     | **Dataset** | NIH ChestX-ray14 — 112,120 imágenes · 14 patologías · 30,805 pacientes |
     | **Entrenamiento** | 10 épocas · GPU Tesla T4 (Kaggle) · Adam lr=1e-4 · BCE multi-etiqueta |
