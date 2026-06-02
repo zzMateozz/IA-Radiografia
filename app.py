@@ -44,11 +44,15 @@ def main():
             unsafe_allow_html=True,
         )
         umbral = st.slider(
-            "Umbral de detección",
+            "Filtro visual de resultados",
             min_value=0.10, max_value=0.60, value=DEFAULT_UMBRAL, step=0.05,
-            help="Probabilidad mínima para considerar presente una patología.",
+            help="Solo resalta patologías con probabilidad ≥ este valor. "
+                 "No modifica el modelo ni sus probabilidades.",
         )
-        st.caption(f"Se marcan hallazgos con probabilidad ≥ {umbral:.0%}.")
+        st.caption(
+            f"Filtro de visualización ≥ {umbral:.0%}. "
+            "Las probabilidades del modelo no cambian."
+        )
 
         sample_path = None
         if "Análisis" in page:

@@ -6,6 +6,8 @@ Universidad Popular del Cesar — Facultad de Ingeniería de Sistemas — 2026-I
 **Integrantes:**
 - Mateo Lopez Patiño
 - Anaclaudia Vega Martinez
+
+**Docente:**
 - Tonny Enrique Jimenez Marquez
 
 ---

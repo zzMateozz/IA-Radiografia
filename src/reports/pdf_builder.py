@@ -11,7 +11,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import (
-    HRFlowable,
     Image as RLImage,
     Paragraph,
     SimpleDocTemplate,
@@ -21,6 +20,7 @@ from reportlab.platypus import (
 )
 
 from src.config import CHEXNET_AUC, PATHO_INFO, PATHOLOGIES
+from src.inference.ground_truth import get_ground_truth, summarize_nih_comparison
 
 
 def build_pdf(img_original, img_overlay, probs, filename, ckpt, test_results, umbral: float = 0.30):
@@ -32,8 +32,8 @@ def build_pdf(img_original, img_overlay, probs, filename, ckpt, test_results, um
     )
 
     dark = colors.HexColor("#0f172a")
-    blue = colors.HexColor("#1d4ed8")
     gray = colors.HexColor("#64748b")
+    light_bg = colors.HexColor("#f8fafc")
 
     styles = getSampleStyleSheet()
     title_st = ParagraphStyle("T", parent=styles["Title"],
@@ -44,7 +44,7 @@ def build_pdf(img_original, img_overlay, probs, filename, ckpt, test_results, um
                             textColor=gray, spaceAfter=2)
     h2_st = ParagraphStyle("H2", parent=styles["Heading2"],
                            fontName="Helvetica-Bold", fontSize=11,
-                           textColor=blue, spaceBefore=12, spaceAfter=5)
+                           textColor=dark, spaceBefore=12, spaceAfter=5)
     body_st = ParagraphStyle("B", parent=styles["Normal"],
                              fontName="Helvetica", fontSize=8,
                              textColor=dark, spaceAfter=3)
@@ -57,10 +57,12 @@ def build_pdf(img_original, img_overlay, probs, filename, ckpt, test_results, um
     story.append(Paragraph(
         "Universidad Popular del Cesar · Inteligencia Artificial 2026-I", sub_st))
     story.append(Paragraph(
-        "Mateo Lopez Patiño · Anaclaudia Vega Martinez · Tonny Enrique Jimenez Marquez", sub_st))
+        "Integrantes: Mateo Lopez Patiño · Anaclaudia Vega Martinez", sub_st))
+    story.append(Paragraph(
+        "Docente: Tonny Enrique Jimenez Marquez", sub_st))
     story.append(Paragraph(
         f"Generado: {datetime.now().strftime('%d/%m/%Y %H:%M')}  ·  Archivo: {filename}", sub_st))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=blue, spaceAfter=8))
+    story.append(Spacer(1, 6))
     story.append(Paragraph(
         "AVISO: Reporte de uso exclusivamente académico. "
         "No reemplaza el criterio de un médico radiólogo especializado.", warn_st))
@@ -88,11 +90,43 @@ def build_pdf(img_original, img_overlay, probs, filename, ckpt, test_results, um
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e2e8f0")),
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f8fafc")),
+        ("BACKGROUND", (0, 0), (-1, 0), light_bg),
     ]))
     story.append(img_tbl)
     story.append(Spacer(1, 12))
+
+    gt = get_ground_truth(filename)
+    if gt is not None:
+        cmp = summarize_nih_comparison(probs, gt)
+        nih_text = gt["labels_raw"] if not gt["no_finding"] else "No Finding"
+        top_text = ", ".join(
+            f"{r['pathology']} ({r['prob']:.1%})" for r in cmp["top_probs"]
+        )
+
+        story.append(Paragraph("Comparación con etiqueta NIH", h2_st))
+        cmp_rows = [
+            [Paragraph("<b>Etiqueta NIH</b>", body_st), Paragraph(nih_text, body_st)],
+            [Paragraph("<b>Mayores probabilidades</b>", body_st), Paragraph(top_text, body_st)],
+        ]
+        if cmp["high_without_label"]:
+            extra = ", ".join(r["pathology"] for r in cmp["high_without_label"])
+            cmp_rows.append([
+                Paragraph("<b>Prob. ≥ 50% sin etiqueta NIH</b>", body_st),
+                Paragraph(extra, body_st),
+            ])
+        cmp_tbl = Table(cmp_rows, colWidths=[1.7 * inch, 5.0 * inch])
+        cmp_tbl.setStyle(TableStyle([
+            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+            ("FONTNAME", (1, 0), (1, -1), "Helvetica"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("TEXTCOLOR", (0, 0), (-1, -1), dark),
+            ("ROWBACKGROUNDS", (0, 0), (-1, -1), [colors.white, light_bg]),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(cmp_tbl)
+        story.append(Spacer(1, 12))
 
     story.append(Paragraph("Resultados por patología", h2_st))
     sorted_idx = np.argsort(probs)[::-1]
@@ -115,13 +149,12 @@ def build_pdf(img_original, img_overlay, probs, filename, ckpt, test_results, um
         ])
     pt = Table(rows, colWidths=[1.3 * inch, 0.85 * inch, 1.1 * inch, 3.45 * inch])
     ts = TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), blue),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("BACKGROUND", (0, 0), (-1, 0), light_bg),
+        ("TEXTCOLOR", (0, 0), (-1, 0), dark),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1),
-         [colors.white, colors.HexColor("#f8fafc")]),
-        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e2e8f0")),
+        ("TEXTCOLOR", (0, 1), (-1, -1), dark),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, light_bg]),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
@@ -135,8 +168,6 @@ def build_pdf(img_original, img_overlay, probs, filename, ckpt, test_results, um
     story.append(pt)
     story.append(Spacer(1, 12))
 
-    story.append(HRFlowable(width="100%", thickness=0.4,
-                            color=colors.HexColor("#e2e8f0"), spaceAfter=6))
     story.append(Paragraph("Información del modelo", h2_st))
     auc_m = test_results["test_auc_mean"] if test_results else 0.0
     best_ep = test_results["best_epoch"] if test_results else (ckpt or {}).get("epoch", "?")
@@ -154,11 +185,8 @@ def build_pdf(img_original, img_overlay, probs, filename, ckpt, test_results, um
         ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
         ("FONTNAME", (1, 0), (1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("TEXTCOLOR", (0, 0), (0, -1), blue),
-        ("TEXTCOLOR", (1, 0), (1, -1), dark),
-        ("ROWBACKGROUNDS", (0, 0), (-1, -1),
-         [colors.white, colors.HexColor("#f8fafc")]),
-        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e2e8f0")),
+        ("TEXTCOLOR", (0, 0), (-1, -1), dark),
+        ("ROWBACKGROUNDS", (0, 0), (-1, -1), [colors.white, light_bg]),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),

@@ -10,6 +10,7 @@ from PIL import Image
 
 from src.config import PATHOLOGIES, list_sample_images
 from src.inference.gradcam import make_gradcam_overlay, ndarray_to_pil
+from src.inference.ground_truth import get_ground_truth, summarize_nih_comparison
 from src.inference.predictor import predict
 from src.reports.pdf_builder import build_pdf
 from ui.components import badge, hero_summary, model_cards, prob_bar, section_title
@@ -33,8 +34,113 @@ def _empty_state():
     </div>""", unsafe_allow_html=True)
 
 
+def _render_ground_truth_comparison(probs, filename: str):
+    gt = get_ground_truth(filename)
+    if gt is None:
+        return None
+
+    cmp = summarize_nih_comparison(probs, gt)
+    nih_text = gt["labels_raw"] if not gt["no_finding"] else "No Finding"
+
+    section_title(
+        "Comparación con etiqueta NIH",
+        "Etiqueta oficial del dataset vs probabilidades del modelo (sin umbral binario).",
+    )
+
+    if cmp["n_nih_labeled"]:
+        summary = (
+            f"NIH etiqueta {cmp['n_nih_labeled']} patología(s). "
+            f"Con probabilidad ≥ 50%: {cmp['n_nih_labeled_high']}/{cmp['n_nih_labeled']}."
+        )
+        summary_kind = "success" if cmp["n_nih_labeled_high"] == cmp["n_nih_labeled"] else "neutral"
+    else:
+        summary = "NIH: No Finding — sin patologías etiquetadas."
+        summary_kind = "neutral"
+
+    st.markdown(
+        f"<div style='margin-bottom:0.75rem;'>{badge(summary, summary_kind)}</div>",
+        unsafe_allow_html=True,
+    )
+
+    col_nih, col_model = st.columns(2, gap="medium")
+    with col_nih:
+        st.markdown(
+            f"<div style='background:{C['surface_soft']};border:1px solid {C['border']};"
+            f"border-radius:12px;padding:1rem 1.1rem;'>"
+            f"<div style='font-size:0.78rem;font-weight:600;color:{C['text_muted']};"
+            f"text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.4rem;'>"
+            f"Etiqueta NIH</div>"
+            f"<div style='font-size:0.95rem;font-weight:600;color:{C['text']};'>"
+            f"{nih_text}</div>"
+            f"<div style='font-size:0.8rem;color:{C['text_muted']};margin-top:0.35rem;'>"
+            f"Archivo: {gt['image_id']}</div>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+    with col_model:
+        top_lines = "<br>".join(
+            f"{r['pathology']}: <b>{r['prob']:.1%}</b>"
+            for r in cmp["top_probs"]
+        )
+        st.markdown(
+            f"<div style='background:{C['surface_soft']};border:1px solid {C['border']};"
+            f"border-radius:12px;padding:1rem 1.1rem;'>"
+            f"<div style='font-size:0.78rem;font-weight:600;color:{C['text_muted']};"
+            f"text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.4rem;'>"
+            f"Mayores probabilidades del modelo</div>"
+            f"<div style='font-size:0.88rem;color:{C['text']};line-height:1.7;'>"
+            f"{top_lines}</div>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+
+    nih_first = sorted(cmp["rows"], key=lambda r: (not r["nih"], -r["prob"]))
+    with st.expander("Ver detalle por patología", expanded=True):
+        for row in nih_first:
+            nih_lbl = "Sí" if row["nih"] else "No"
+            nih_style = (
+                f"background:{C['primary']}14;border-left:3px solid {C['primary']};"
+                if row["nih"] else ""
+            )
+            note_badge = badge(row["note"], row["note_kind"])
+            st.markdown(
+                f"<div style='display:flex;justify-content:space-between;align-items:center;"
+                f"flex-wrap:wrap;gap:0.5rem;padding:0.5rem 0.65rem;margin-bottom:0.25rem;"
+                f"border-bottom:1px solid {C['border_light']};font-size:0.85rem;"
+                f"border-radius:8px;{nih_style}'>"
+                f"<span style='font-weight:600;color:{C['text']};min-width:140px;'>"
+                f"{row['pathology']}</span>"
+                f"<span style='color:{C['text_muted']};'>NIH: <b>{nih_lbl}</b></span>"
+                f"<span style='font-weight:700;color:{C['text']};'>{row['prob']:.1%}</span>"
+                f"{note_badge}"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+
+    if cmp["high_without_label"]:
+        names = ", ".join(r["pathology"] for r in cmp["high_without_label"])
+        st.info(
+            f"Probabilidad ≥ 50% sin etiqueta NIH: **{names}**. "
+            "Puede ser un falso positivo o una etiqueta incompleta del dataset."
+        )
+
+    st.markdown(f"""
+    <div style='background:{C['surface_soft']};border:1px solid {C['border_light']};
+                border-radius:12px;padding:0.75rem 1rem;font-size:0.8rem;
+                color:{C['text_muted']};margin-top:0.5rem;line-height:1.5;'>
+      El modelo entrega <b>probabilidades</b>, no diagnóstico sí/no.
+      Las etiquetas NIH provienen de <code>metadata_clean.csv</code>.
+      El filtro del sidebar solo afecta la sección de resultados, no esta comparación.
+    </div>""", unsafe_allow_html=True)
+
+    return cmp
+
+
 def _render_results(probs, umbral: float, test_results):
-    section_title("Resultados por patología")
+    section_title(
+        "Resultados por patología",
+        f"Patologías con probabilidad ≥ {umbral:.0%} (filtro visual del sidebar).",
+    )
     positivos = sorted(
         [(p, probs[i]) for i, p in enumerate(PATHOLOGIES) if probs[i] >= umbral],
         key=lambda x: x[1], reverse=True,
@@ -67,13 +173,13 @@ def _render_results(probs, umbral: float, test_results):
                 Sin hallazgos sobre el umbral
               </div>
               <div style='color:{C['text_muted']};font-size:0.85rem;margin-top:0.35rem;'>
-                Todas las probabilidades están por debajo de {umbral:.0%}
+                Todas las probabilidades están por debajo del filtro ({umbral:.0%})
               </div>
             </div>""", unsafe_allow_html=True)
     with col_neg:
         st.markdown(
             f"<div style='color:{C['text_muted']};font-size:0.85rem;margin-bottom:0.9rem;"
-            f"font-weight:500;'>Patologías no detectadas</div>",
+            f"font-weight:500;'>Por debajo del filtro visual ({umbral:.0%})</div>",
             unsafe_allow_html=True,
         )
         st.markdown("".join(
@@ -137,6 +243,7 @@ def render(model, ckpt, test_results, umbral: float, sample_path: Path | None = 
         status.update(label="Análisis completado", state="complete")
 
     hero_summary(probs, umbral)
+    comparison = _render_ground_truth_comparison(probs, filename)
 
     section_title(
         f"Mapa Grad-CAM — {selected_name}",
@@ -200,6 +307,19 @@ def render(model, ckpt, test_results, umbral: float, sample_path: Path | None = 
             },
             "gradcam_patologia": selected_name,
         }
+        gt = get_ground_truth(filename)
+        if gt is not None:
+            cmp = comparison or summarize_nih_comparison(probs, gt)
+            export["etiqueta_nih"] = gt["labels_raw"]
+            export["comparacion_nih"] = {
+                "nih_positives": cmp["nih_positives"],
+                "top_probabilidades": {
+                    r["pathology"]: round(r["prob"], 4) for r in cmp["top_probs"]
+                },
+                "prob_elevada_sin_etiqueta": [
+                    r["pathology"] for r in cmp["high_without_label"]
+                ],
+            }
         st.download_button(
             "Descargar JSON",
             data=json.dumps(export, indent=2, ensure_ascii=False),
